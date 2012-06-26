@@ -52,7 +52,8 @@ int writeEntry(const char* pdf_name, const int page_number){
 	   char format[16]={0};
 	   if(pos2-linec){
 		sprintf(format,"%%%ldc", pos2-linec);
-		fscanf(fpr, format, mapFile); curPos+=pos2-linec;
+		fscanf(fpr, format, mapFile);
+		curPos+=pos2-linec;
 		memset(format,0,16*sizeof(char));
 	   }
 	   /* edited line */
@@ -60,8 +61,11 @@ int writeEntry(const char* pdf_name, const int page_number){
 		   "%s%c%d\n", pdf_name, delim, page_number);
 	   fseek(fpr, pos2, SEEK_SET);
 	   /* after edited line */
-	   sprintf(format,"%%%ldc", size-pos2);
-	   fscanf(fpr, format, mapFile+curPos); curPos += size-pos2;
+	   if(size-pos2){
+		sprintf(format,"%%%ldc", size-pos2);
+		fscanf(fpr, format, mapFile+curPos);
+		curPos += size-pos2;
+	   }
 	   if(!(fp=freopen(history_File,"w",fp))){
 		free(mapFile); fclose(fpr);
 		return fprintf(stderr, "Cannot reopen file %s W.\n", history_File);
