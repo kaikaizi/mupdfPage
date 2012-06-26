@@ -42,30 +42,31 @@ int writeEntry(const char* pdf_name, const int page_number){
 	   fprintf(stderr,"Error in writeFile: cannot open RO file %s\n",
 		   history_File);
 	fseek(fpr, 0, SEEK_END);
-	long size = ftell(fpr)+MaxLineSize, curPos=0;
+	long size = ftell(fpr), curPos=0;
 	char* mapFile;
-	if(size<MaxMemSize && (mapFile=(char*)malloc(size*sizeof(char)))){
+	if(size+MaxLineSize<MaxMemSize && (mapFile=(char*)malloc(
+			(size+MaxLineSize)*sizeof(char)))){
 	   /* read line-edited file into memory */
 	   fseek(fpr, 0, SEEK_SET);
 	   /* before edited line */
-	   while(fgets(line,MaxLineSize,fpr) && (pos=parseLine(line, 0x1b))>=0){
-		if(!strncmp(line,pdf_name,pos-1))break;
-		curPos += snprintf(mapFile+curPos,(size_t)MaxMemSize,
-			"%s",line);
+	   char format[16]={0};
+	   if(pos2-linec){
+		sprintf(format,"%%%ldc", pos2-linec);
+		fscanf(fpr, format, mapFile); curPos+=pos2-linec;
+		memset(format,0,16*sizeof(char));
 	   }
 	   /* edited line */
 	   curPos += snprintf(mapFile+curPos, (size_t)MaxMemSize,
 		   "%s%c%d\n", pdf_name, delim, page_number);
 	   fseek(fpr, pos2, SEEK_SET);
 	   /* after edited line */
-	   while(fgets(line,MaxLineSize,fpr))
-		curPos += snprintf(mapFile+curPos,(size_t)MaxMemSize,
-			"%s",line);
+	   sprintf(format,"%%%ldc", size-pos2);
+	   fscanf(fpr, format, mapFile+curPos); curPos += size-pos2;
 	   if(!(fp=freopen(history_File,"w",fp))){
 		free(mapFile); fclose(fpr);
 		return fprintf(stderr, "Cannot reopen file %s W.\n", history_File);
 	   }
-	   mapFile[curPos+1]=0;
+	   mapFile[curPos]=0;
 	   fprintf(fp, "%s",mapFile);
 	   free(mapFile);
 	}
