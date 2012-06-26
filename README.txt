@@ -5,7 +5,7 @@ numbers is a great convenience. So I added a couple of functions to
 do this, in 'pdfpage.h', and modified a few lines in pdfapp.c to
 achieve autosaving before exiting and autoloading before opening.
 
-The hack was done on a svn version as of Jun 25 afternoon, and the
+The hack was done on a git version as of Jun 25 afternoon, and the
 "pdfapp.c" file in "apps" directory was forever changing, thus it's
 not feasible to create a patch. The edits in pdfapp.c are listed as
 follows (the lines are inaccurate, but I try to make it easy to

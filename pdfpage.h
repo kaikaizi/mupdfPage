@@ -55,7 +55,7 @@ int writeEntry(const char* pdf_name, const int page_number){
 	   }
 	   /* edited line */
 	   curPos += snprintf(mapFile+curPos, (size_t)MaxMemSize,
-		   "%s%d\n", pdf_name, page_number);
+		   "%s%c%d\n", pdf_name, delim, page_number);
 	   fseek(fpr, pos2, SEEK_SET);
 	   /* after edited line */
 	   while(fgets(line,MaxLineSize,fpr))
@@ -83,7 +83,7 @@ int writeEntry(const char* pdf_name, const int page_number){
 		if(!strncmp(line,pdf_name,pos-1))break;
 		fputs(line, fp2);
 	   }
-	   fprintf(fp2, "%s%d\n", pdf_name, page_number);
+	   fprintf(fp2, "%s%c%d\n", pdf_name, delim, page_number);
 	   fseek(fpr, pos2, SEEK_SET);
 	   while(fgets(line,MaxLineSize,fpr)) fputs(line, fp2);
 	   fclose(fp2); fclose(fp);
@@ -92,7 +92,7 @@ int writeEntry(const char* pdf_name, const int page_number){
 	return fclose(fpr);
    }
    else {
-	fprintf(fp, "%s%d\n", pdf_name, page_number);
+	fprintf(fp, "%s%c%d\n", pdf_name, delim, page_number);
 	return fclose(fp);
    }
    return 0;
