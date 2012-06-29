@@ -37,37 +37,33 @@ int writeEntry(const char* pdf_name, const int page_number){
 	fgets(line,MaxLineSize,fp);
 	if(atoi(line+parseLine(line, 0x1b))==page_number)
 	   return fclose(fp);
-	FILE *fpr = fopen(history_File, "r");
-	if(!fpr) return
-	   fprintf(stderr,"Error in writeFile: cannot open RO file %s\n",
-		   history_File);
-	fseek(fpr, 0, SEEK_END);
-	long size = ftell(fpr), curPos=0;
+	fseek(fp, 0, SEEK_END);
+	long size = ftell(fp), curPos=0;
 	char* mapFile;
 	if(size+MaxLineSize<MaxMemSize && (mapFile=(char*)malloc(
 			(size+MaxLineSize)*sizeof(char)))){
 	   /* read line-edited file into memory */
-	   fseek(fpr, 0, SEEK_SET);
+	   fseek(fp, 0, SEEK_SET);
 	   /* before edited line */
 	   char format[16]={0};
 	   if(pos2-linec){
 		sprintf(format,"%%%ldc", pos2-linec);
-		fscanf(fpr, format, mapFile);
+		fscanf(fp, format, mapFile);
 		curPos+=pos2-linec;
-		memset(format,0,16*sizeof(char));
 	   }
 	   /* edited line */
 	   curPos += snprintf(mapFile+curPos, (size_t)MaxMemSize,
 		   "%s%c%d\n", pdf_name, delim, page_number);
-	   fseek(fpr, pos2, SEEK_SET);
+	   fseek(fp, pos2, SEEK_SET);
 	   /* after edited line */
 	   if(size-pos2){
+		memset(format,0,16*sizeof(char));
 		sprintf(format,"%%%ldc", size-pos2);
-		fscanf(fpr, format, mapFile+curPos);
+		fscanf(fp, format, mapFile+curPos);
 		curPos += size-pos2;
 	   }
 	   if(!(fp=freopen(history_File,"w",fp))){
-		free(mapFile); fclose(fpr);
+		free(mapFile);
 		return fprintf(stderr, "Cannot reopen file %s W.\n", history_File);
 	   }
 	   mapFile[curPos]=0;
@@ -83,18 +79,18 @@ int writeEntry(const char* pdf_name, const int page_number){
 	   if(!fp2) return
 		fprintf(stderr, "Error in writeFile: cannot create tmp file%s.\n",
 			history2);
-	   while(fgets(line,MaxLineSize,fpr) &&
+	   while(fgets(line,MaxLineSize,fp) &&
 		   (pos=parseLine(line, 0x1b))>=0){
 		if(!strncmp(line,pdf_name,pos-1))break;
 		fputs(line, fp2);
 	   }
 	   fprintf(fp2, "%s%c%d\n", pdf_name, delim, page_number);
-	   fseek(fpr, pos2, SEEK_SET);
-	   while(fgets(line,MaxLineSize,fpr)) fputs(line, fp2);
+	   fseek(fp, pos2, SEEK_SET);
+	   while(fgets(line,MaxLineSize,fp)) fputs(line, fp2);
 	   fclose(fp2); fclose(fp);
 	   rename(history2, history_File);
 	}
-	return fclose(fpr);
+	return fclose(fp);
    }
    else {
 	fprintf(fp, "%s%c%d\n", pdf_name, delim, page_number);
