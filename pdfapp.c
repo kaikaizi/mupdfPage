@@ -149,6 +149,7 @@ void pdfapp_open(pdfapp_t *app, char *filename, int reload)
 
    /* Hack: load page number if found */
    app->pageno = readEntry(app->doctitle);
+   printf("Hack=%d\n", app->pageno);
    pdfapp_showpage(app, 1, 1, 1);
 }
 
