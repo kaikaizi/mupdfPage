@@ -1,3 +1,4 @@
+// VimMake: CC=(musl-gcc) CFLAGS=(-Wall)
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -5,10 +6,9 @@
 struct trie;
 typedef struct trie{
    struct trie** children;
-   size_t node_freq, sum_freq;
+   unsigned node_freq, sum_freq;
 }trie;
 static const size_t factor=26, maxDepth=512;
-extern _IO_ssize_t getline(char**,size_t*,FILE*);
 
 trie* newTrie(){
    trie* t=(trie*)calloc(1,sizeof(trie));
@@ -42,30 +42,24 @@ void addWord(trie*t, const char*str){
 }
 void rmWord(trie*t, const char*str){
    if(!(t&&str&&sanityWord(str)))return;
-   size_t ppath=0, len=strlen(str);
+   unsigned ppath=0, len=strlen(str);
    trie *cur=t, *path[len]; path[0]=cur;
    const char* p=str;
    while(cur&&*p)path[ppath++]=cur=cur->children[*p++-'a'];
-   if(!*p){   /* found word entry */
-	int indx, indx2;
-	for(indx=0; indx<ppath; ++indx)
-	   if(!--path[indx]->sum_freq)break;
-	if(indx>=ppath)--path[ppath-1]->node_freq;
-	indx2=indx;
-	while(indx<ppath){
-	   putchar(str[indx]);
-	   rmTrie(path[indx++]);
-	}
-	if(indx2<=0)
-	   path[indx2]->children[str[indx2]-'a']=0;
+   if(*p)return;
+   for(ppath=0;ppath<len&&--path[ppath]->sum_freq;++ppath);
+   while(ppath<len){
+	putchar(str[ppath]);fflush(stdout);
+	rmTrie(path[ppath++]);
    }
+   puts("");
 }
-void showNodes(const trie*t){
+void showNodes(const trie*t){	   /* bfs */
    if(!t)return;
    int indx;
    for(indx=0; indx<factor; ++indx)
 	if(t->children[indx]){
-	   printf("\"%c\"(%lu,%lu)-:", indx+'a', t->sum_freq,
+	   printf("\"%c\"(%u,%u)-:", indx+'a', t->sum_freq,
 		   t->node_freq);
 	   showNodes(t->children[indx]);
 	}
@@ -88,7 +82,7 @@ void showWords(const trie*t){
 	   path[++depth]=0;
 	   if(trace[depth]->node_freq){
 		word[depth]=0;
-		printf("%s: %lu\n", word,trace[depth]->node_freq);
+		printf("%s: %u\n", word,trace[depth]->node_freq);
 	   }
 	}
    }
@@ -112,8 +106,7 @@ void buildTrie(const char*fname,trie*root,void(*action)
 	   while(*end && *end>='a' && *end<='z')++end;
 	   if(!*end)break;
 	   memcpy(word2,beg,end-beg); word2[end-beg]=0;
-	   action(root,word2);
-	   beg=++end;
+	   action(root,word2); beg=++end;
 	}
    }
    fclose(fp);
@@ -123,14 +116,14 @@ void destroyTrie(trie*root){
    char path[maxDepth+1];
    memset(path,0,maxDepth+1);
    trie*trace[maxDepth+1]; trace[0]=root;
-   int depth=0, nEntry=0;
+   int depth=0;
    while(depth>=0 && depth<maxDepth){
 	while(path[depth]<factor &&
 		!trace[depth]->children[(int)path[depth]])
 	   ++path[depth];
 	if(path[depth]>=factor){   /* rm node */
 	   rmTrie(trace[depth]);
-	   path[depth--]=0; ++path[depth]; ++nEntry;
+	   path[depth--]=0; ++path[depth];
 	}else{
 	   trace[depth+1]=trace[depth]->children[(int)path[depth]];
 	   path[++depth]=0;
@@ -158,7 +151,7 @@ void prompt(const trie*root,const char*str){
 	   path[++depth]=0;
 	   if(trace[depth]->node_freq){
 		word[dif+depth]=0;
-		printf("[%s]:%lu\n", word,trace[depth]->node_freq);
+		printf("[%s]:%u\n", word,trace[depth]->node_freq);
 	   }
 	}
    }
@@ -166,13 +159,19 @@ void prompt(const trie*root,const char*str){
 
 int main(int argc, char*argv[]){
    if(argc<2)return
-	!printf("Usage: %s dictFname [partialWord]\n",argv[0]);
+	!printf("Usage: %s dictFname [partialWord1 [partialWord2] ...]\n",argv[0]);
    trie* root=newTrie(0);
    buildTrie(argv[1],root, addWord);
+//    showWords(root);
 //    buildTrie(argv[1],root, rmWord); /* TODO: buggy */
 //    showNodes(root); puts("");
-//    showWords(root);
-   if(argc>2)
-	prompt(root,argv[2]);
+   if(argc>2){
+	int indx=2;
+	for(; indx<argc; ++indx){
+	   prompt(root,argv[indx]);
+	   puts("");
+	}
+   }
    destroyTrie(root);
+   return 0;
 }
