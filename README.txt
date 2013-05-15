@@ -1,3 +1,15 @@
+*Update: Wed May 15 2013*
+
+finally added a patch script. Put current directory in gitted `mupdf`
+directory, execute `mupdfPage/patch.sh` and on success, make && make install.
+
+Note that Makefile generates debug version on default, so you'd probably want
+to call instead:
+
+build=release make
+
+***********************
+
 MuPDF doesn't support page number saving/loading when exiting a
 file and re-opening a file. The software is designed to be dead
 simple without any config files, but I decided that saving page
@@ -9,7 +21,7 @@ The hack was done on a git version as of Jun 25 afternoon, and the
 "pdfapp.c" file in "apps" directory was forever changing, thus it's
 not feasible to create a patch. The edits in pdfapp.c are listed as
 follows (the lines are inaccurate, but I try to make it easy to
-find here. I am too lazy to use sed, which may not be safe after
+find here. I am too lazy to sed, which may not be safe after
 revisions):
 
 1. in about line 79:
