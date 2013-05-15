@@ -1,10 +1,16 @@
 *Update: Wed May 15 2013*
 
-finally added a patch script. Put current directory in gitted `mupdf`
-directory, execute `mupdfPage/patch.sh` and on success, make && make install.
+Finally added a patch script. To build,
 
-Note that Makefile generates debug version on default, so you'd probably want
-to call instead:
+   git clone --recursive git://git.ghostscript.com/mupdf.git
+   cd mupdf
+   mv path-to-mupdfPage .
+   mupdfPage/patch.sh
+
+On success, make && make install.
+
+Note that Makefile generates debug version on default, so you'd
+probably want:
 
 build=release make
 
